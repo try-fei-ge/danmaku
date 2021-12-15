@@ -13,11 +13,11 @@ import com.blackcat.danmaku.face.FrameFace
 
 internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val danmakuView: DanmakuView) {
     private var isPrepared: Boolean = false
-    private val mainHandler : Handler = Handler(Looper.getMainLooper())
     private var handler: DrawHandler ?= null
     private var handlerThread: HandlerThread ?= null
     private var pendingMeasure : PendingMeasure ?= null
-    @Volatile internal var danmakuContainerInit : (() -> List<DanmakuContainer<*>>?) ?= null
+    @Volatile private var prepareTime = 0L
+    internal var danmakuContainerInit : (() -> List<DanmakuContainer<*>>?) ?= null
 
     fun prepare() {
         if (isPrepared) return
@@ -33,7 +33,7 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         }.let {
             it.start()
             handlerThread = it
-            handler = DrawHandler(it.looper, danmakuContext)
+            handler = DrawHandler(it.looper, danmakuContext) { prepareTime }
             it.isAlive
         }
         val pending = pendingMeasure
@@ -55,9 +55,9 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         danmakuView.invalidate()
     }
 
-    fun getFrame(time: Long, failureFace: FrameFace?) : FrameFace? {
+    fun getFrame(failureFace: FrameFace?) : FrameFace? {
         if (!isPrepared) return null
-        return handler!!.exchangeArea.getDrawFrame(time, failureFace)
+        return handler!!.exchangeArea.getDrawFrame(prepareTime, failureFace)
     }
 
     fun refresh() {
@@ -72,7 +72,8 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
     fun timeUpdate(time: Long) {
         if (isPrepared) {
             handler!!.run {
-                sendMessage(obtainMessage(DrawHandler.TIME_UPDATE, time))
+                prepareTime = time
+                sendMessage(obtainMessage(DrawHandler.TIME_UPDATE))
             }
         }
     }

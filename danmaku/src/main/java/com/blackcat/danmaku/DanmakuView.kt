@@ -40,7 +40,6 @@ class DanmakuView : View {
     private val danmakuContext = DanmakuContext(DanmakuDisplay())
     private val danmakuSchedule : DrawSchedule = DrawSchedule(danmakuContext, this)
     private var drawFrame : FrameFace ?= null
-    private var prepareFrameTime = 0L
 
     constructor(context: Context) : super(context)
 
@@ -93,12 +92,11 @@ class DanmakuView : View {
 
     private fun drawFrame(time: Long) {
         danmakuSchedule.run {
-            this.getFrame(prepareFrameTime, drawFrame)?.let {
+            this.getFrame(drawFrame)?.let {
                 drawFrame = it
                 invalidate()
             }
-            prepareFrameTime = time
-            this.timeUpdate(prepareFrameTime)
+            this.timeUpdate(time)
         }
     }
 

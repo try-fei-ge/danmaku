@@ -8,7 +8,6 @@ class FrameFace {
     var time: Long = 0
     var displayFaceVersion : Int = 0
     val danmakuSetLayers : LinkedList<LinkedList<DanmakuFrame>> = LinkedList()
-    @Volatile internal var isDrawing = false
 
     @MainThread
     fun draw(canvas: Canvas) {

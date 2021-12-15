@@ -10,7 +10,7 @@ import com.blackcat.danmaku.face.ExchangeArea
 import java.util.*
 import kotlin.math.abs
 
-internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) : Handler(looper) {
+internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, val timeFetch : (() -> Long)) : Handler(looper) {
     companion object WHAT_OF {
         const val ADD = 1
         const val TIME_UPDATE = 2
@@ -50,7 +50,7 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) :
                     exchangeArea.clearFrame()
                 }
                 TIME_UPDATE -> {
-                    makeFrame(msg.obj as Long)
+                    makeFrame(timeFetch.invoke())
                 }
             }
         } catch (throwable : Throwable) {
