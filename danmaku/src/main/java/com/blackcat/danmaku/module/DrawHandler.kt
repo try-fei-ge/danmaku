@@ -27,15 +27,12 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) :
                     val danmaku: Danmaku<*, *> = msg.obj as Danmaku<*, *>
                     val danmakuContainerList = danmakuContext.danmakuContainerList.get()
                     danmakuContainerList?.let {
-                        var index = 0
                         for (container in it) {
                             if (container.supportDanmaku(danmaku)) {
                                 container.addDanmaku(danmaku)
                             }
-                            index += 1
                         }
                     }
-                    checkFrameProtect()
                 }
                 DISPLAY_UPDATE -> {
                     val display = danmakuContext.danmakuDisplay
@@ -51,10 +48,9 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) :
                     display.changeEnable = false
                     danmakuScreen.clearScreen()
                     exchangeArea.clearFrame()
-                    makeFrame()
                 }
                 TIME_UPDATE -> {
-                    makeFrame()
+                    makeFrame(msg.obj as Long)
                 }
             }
         } catch (throwable : Throwable) {
@@ -62,9 +58,8 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) :
         }
     }
 
-    private fun makeFrame() {
+    private fun makeFrame(currentTime: Long) {
         val display = danmakuContext.danmakuDisplay
-        val currentTime = danmakuContext.danmakuTimer.getCurrentTime()
         val danmakuContainerList = danmakuContext.danmakuContainerList.get()
         if (!display.isMeasured() || danmakuContainerList == null || danmakuContainerList.isEmpty()) {
             danmakuScreen.screenTime = currentTime
@@ -88,13 +83,6 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext) :
         if (hasMessages(DISPLAY_UPDATE)) exchangeArea.recyclerFrame(frameFace)
         else {
             if (!init || !hasMessages(TIME_UPDATE)) exchangeArea.joinWorkFrame(frameFace)
-        }
-    }
-
-    private fun checkFrameProtect() {
-        if (danmakuScreen.screenTime == DanmakuContext.NO_TIME || danmakuContext.danmakuFrameProtected == DanmakuContext.NO_TIME) return
-        if (abs(danmakuContext.danmakuTimer.getCurrentTime() - danmakuScreen.screenTime) > danmakuContext.danmakuFrameProtected) {
-            makeFrame()
         }
     }
 }

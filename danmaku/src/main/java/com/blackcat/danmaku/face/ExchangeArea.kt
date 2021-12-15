@@ -7,49 +7,34 @@ import java.util.concurrent.ConcurrentLinkedQueue
 internal class ExchangeArea {
     private val busyQueue : ConcurrentLinkedQueue<FrameFace> = ConcurrentLinkedQueue()
     private val idleQueue : ConcurrentLinkedQueue<FrameFace> = ConcurrentLinkedQueue()
-    var arriveCallback: ((Boolean) -> Unit) ?= null
-    private var drawFrame : FrameFace ?= null
-        @Synchronized set
-        @Synchronized get
 
     @MainThread
-    fun getDrawFrame() : FrameFace? {
-        return drawFrame
-    }
-
-    @MainThread
-    fun syncNext() : Boolean {
-        if (busyQueue.size > 0) {
-            drawFrame = busyQueue.poll()
-            return true
-        }
-        return false
-    }
-
-    @MainThread
-    fun trySyncNext() {
-        if (drawFrame?.isDrawing == true) {
-            busyQueue.peek()?.let {
-                val frame = drawFrame
-                idleQueue.offer(frame)
-                drawFrame = it
-                busyQueue.poll()
-                arriveCallback?.run { invoke(false) }
+    fun getDrawFrame(time: Long, failureFace: FrameFace?) : FrameFace? {
+        var preFrame : FrameFace? = failureFace
+        var newFrame : FrameFace?
+        while (true) {
+            newFrame = busyQueue.peek()
+            if (newFrame == null) {
+                newFrame = preFrame
+                break
             }
+            if (newFrame.time == time) {
+                busyQueue.poll()
+                break
+            }
+            if (newFrame.time > time) {
+                newFrame = preFrame
+                break
+            }
+            busyQueue.poll()
+            preFrame = newFrame
         }
+        return newFrame
     }
 
     @WorkerThread
     fun joinWorkFrame(frameFace: FrameFace) {
-        if (drawFrame == null || drawFrame!!.isDrawing) {
-            val newFrame = busyQueue.poll() ?: frameFace
-            newFrame.isDrawing = false
-            drawFrame = newFrame
-        } else {
-            frameFace.isDrawing = false
-            busyQueue.offer(frameFace)
-        }
-        arriveCallback?.run { invoke(false) }
+        busyQueue.offer(frameFace)
     }
 
     @MainThread
@@ -63,8 +48,6 @@ internal class ExchangeArea {
     }
 
     fun clearFrame() {
-        drawFrame = null
         busyQueue.clear()
-        arriveCallback?.run { invoke(true) }
     }
 }

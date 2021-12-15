@@ -37,8 +37,10 @@ class DanmakuView : View {
             }
         }
     }
-    private val danmakuContext = DanmakuContext(DanmakuDisplay(), getTimer())
+    private val danmakuContext = DanmakuContext(DanmakuDisplay())
     private val danmakuSchedule : DrawSchedule = DrawSchedule(danmakuContext, this)
+    private var drawFrame : FrameFace ?= null
+    private var prepareFrameTime = 0L
 
     constructor(context: Context) : super(context)
 
@@ -52,13 +54,9 @@ class DanmakuView : View {
             danmakuSchedule.displayUpdate(width, height)
         }
     }
-    var lastDrawTime = 0L
+
     override fun onDraw(canvas: Canvas?) {
-        danmakuSchedule.getFrame()?.let {
-            Log.e("Run", "draw2 " + it.time + " " + lastDrawTime + " " + (lastDrawTime - it.time))
-            if (canvas != null) it.draw(canvas)
-            lastDrawTime = it.time
-        }
+        drawFrame?.let { if (canvas != null) it.draw(canvas) }
     }
 
     fun config(
@@ -93,9 +91,14 @@ class DanmakuView : View {
         return danmakuTimerWarp
     }
 
-    private fun drawFrame() {
+    private fun drawFrame(time: Long) {
         danmakuSchedule.run {
-            timeUpdate()
+            this.getFrame(prepareFrameTime, drawFrame)?.let {
+                drawFrame = it
+                invalidate()
+            }
+            prepareFrameTime = time
+            this.timeUpdate(prepareFrameTime)
         }
     }
 
@@ -112,7 +115,7 @@ class DanmakuView : View {
             val interval = if (lastFrameTime == -1L) 0 else currentTime - lastFrameTime
             this.currentTime += interval
             lastFrameTime = currentTime
-            this@DanmakuView.drawFrame()
+            this@DanmakuView.drawFrame(this.currentTime)
         }
 
         override fun start() {

@@ -33,16 +33,7 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         }.let {
             it.start()
             handlerThread = it
-            handler = DrawHandler(it.looper, danmakuContext).let { handlerIt ->
-                handlerIt.exchangeArea.arriveCallback = {
-                    mainHandler.post {
-                        if (it || handlerIt.exchangeArea.getDrawFrame()?.isDrawing == false) {
-                            danmakuView.invalidate()
-                        }
-                    }
-                }
-                handlerIt
-            }
+            handler = DrawHandler(it.looper, danmakuContext)
             it.isAlive
         }
         val pending = pendingMeasure
@@ -55,7 +46,6 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         if (isPrepared) return
         handler?.run {
             removeCallbacksAndMessages(null)
-            exchangeArea.arriveCallback = null
         }
         handler!!.removeCallbacksAndMessages(null)
         handlerThread!!.quit()
@@ -65,25 +55,9 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         danmakuView.invalidate()
     }
 
-    fun getFrame() : FrameFace? {
+    fun getFrame(time: Long, failureFace: FrameFace?) : FrameFace? {
         if (!isPrepared) return null
-        return handler!!.let { handlerIt ->
-            handlerIt.exchangeArea.getDrawFrame()?.let {
-                if (!it.isDrawing) it.isDrawing = true
-                handlerIt.exchangeArea.trySyncNext()
-                it
-            }
-        }
-    }
-
-    fun getFrameEx() : FrameFace? {
-        if (!isPrepared) return null
-        return handler!!.exchangeArea.getDrawFrame()
-    }
-
-    fun syncNextFrame() : Boolean {
-        if (!isPrepared) return false
-        return handler!!.exchangeArea.syncNext()
+        return handler!!.exchangeArea.getDrawFrame(time, failureFace)
     }
 
     fun refresh() {
@@ -95,10 +69,10 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         return isPrepared
     }
 
-    fun timeUpdate() {
+    fun timeUpdate(time: Long) {
         if (isPrepared) {
             handler!!.run {
-                sendMessage(obtainMessage(DrawHandler.TIME_UPDATE))
+                sendMessage(obtainMessage(DrawHandler.TIME_UPDATE, time))
             }
         }
     }
