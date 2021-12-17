@@ -49,9 +49,7 @@ class DanmakuView : View {
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        if (changed) {
-            danmakuSchedule.displayUpdate(width, height)
-        }
+        if (changed) refresh()
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -90,6 +88,12 @@ class DanmakuView : View {
         return danmakuTimerWarp
     }
 
+    private fun refresh() {
+        drawFrame = null
+        danmakuSchedule.displayUpdate(width, height)
+        invalidate()
+    }
+
     private fun drawFrame(time: Long) {
         danmakuSchedule.run {
             this.getFrame(drawFrame)?.let {
@@ -102,15 +106,16 @@ class DanmakuView : View {
 
     private inner class DanmakuTimerImpl : FrameCall, DanmakuTimer {
         @Volatile private var currentTime: Long = 0
-        private var lastFrameTime: Long = -1
+        private var lastFrameTime: Long = DanmakuContext.NO_TIME
         private var isWorking: Boolean = false
 
         fun resetTime() {
+            stop()
             currentTime = 0
         }
 
         override fun doFrame(currentTime: Long) {
-            val interval = if (lastFrameTime == -1L) 0 else currentTime - lastFrameTime
+            val interval = if (lastFrameTime == DanmakuContext.NO_TIME) 0 else currentTime - lastFrameTime
             this.currentTime += interval
             lastFrameTime = currentTime
             this@DanmakuView.drawFrame(this.currentTime)
@@ -119,7 +124,7 @@ class DanmakuView : View {
         override fun start() {
             if (isWorking) return
             isWorking = true
-            lastFrameTime = -1
+            lastFrameTime = DanmakuContext.NO_TIME
             invalidate()
             RefreshMachine.instance.registerFrame(this)
         }

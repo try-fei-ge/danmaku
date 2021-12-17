@@ -60,11 +60,6 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         return handler!!.exchangeArea.getDrawFrame(prepareTime, failureFace)
     }
 
-    fun refresh() {
-        val display = danmakuContext.danmakuDisplay
-        if (display.isMeasured()) displayUpdate(display.faceWidth, display.faceHeight)
-    }
-
     fun isPrepared() : Boolean {
         return isPrepared
     }
@@ -81,6 +76,8 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
     fun displayUpdate(width: Int, height: Int) {
         if (isPrepared) {
             handler!!.run {
+                exchangeArea.clearFrame()
+                removeMessages(DrawHandler.TIME_UPDATE)
                 removeMessages(DrawHandler.DISPLAY_UPDATE)
                 sendMessageAtFrontOfQueue(obtainMessage(DrawHandler.DISPLAY_UPDATE, width, height))
             }

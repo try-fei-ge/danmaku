@@ -8,7 +8,6 @@ import com.blackcat.danmaku.Print
 import com.blackcat.danmaku.face.DanmakuScreen
 import com.blackcat.danmaku.face.ExchangeArea
 import java.util.*
-import kotlin.math.abs
 
 internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, val timeFetch : (() -> Long)) : Handler(looper) {
     companion object WHAT_OF {
@@ -33,6 +32,10 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
                             }
                         }
                     }
+                    if (hasMessages(TIME_UPDATE)) {
+                        removeMessages(TIME_UPDATE)
+                        makeFrame(timeFetch.invoke())
+                    }
                 }
                 DISPLAY_UPDATE -> {
                     val display = danmakuContext.danmakuDisplay
@@ -48,6 +51,12 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
                     display.changeEnable = false
                     danmakuScreen.clearScreen()
                     exchangeArea.clearFrame()
+                    val time = timeFetch.invoke() - 1
+                    makeFrame(if (time < 0) 0 else time)
+                    if (hasMessages(TIME_UPDATE)) {
+                        removeMessages(TIME_UPDATE)
+                        makeFrame(timeFetch.invoke())
+                    }
                 }
                 TIME_UPDATE -> {
                     makeFrame(timeFetch.invoke())
@@ -59,6 +68,7 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
     }
 
     private fun makeFrame(currentTime: Long) {
+        if (currentTime <= danmakuScreen.screenTime) return
         val display = danmakuContext.danmakuDisplay
         val danmakuContainerList = danmakuContext.danmakuContainerList.get()
         if (!display.isMeasured() || danmakuContainerList == null || danmakuContainerList.isEmpty()) {
@@ -82,7 +92,8 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
         danmakuScreen.endEdit()
         if (hasMessages(DISPLAY_UPDATE)) exchangeArea.recyclerFrame(frameFace)
         else {
-            if (!init || !hasMessages(TIME_UPDATE)) exchangeArea.joinWorkFrame(frameFace)
+            if (init) exchangeArea.recyclerFrame(frameFace)
+            else exchangeArea.joinWorkFrame(frameFace)
         }
     }
 }
