@@ -1,14 +1,8 @@
 package com.blackcat.danmaku.module
 
-import android.os.Handler
 import android.os.HandlerThread
-import android.os.Looper
-import android.util.Log
-import androidx.core.view.isInvisible
-import com.blackcat.danmaku.DanmakuContainerInit
 import com.blackcat.danmaku.DanmakuContext
 import com.blackcat.danmaku.DanmakuView
-import com.blackcat.danmaku.face.DanmakuFrame
 import com.blackcat.danmaku.face.FrameFace
 
 internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val danmakuView: DanmakuView) {
@@ -36,14 +30,14 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
             handler = DrawHandler(it.looper, danmakuContext) { prepareTime }
             it.isAlive
         }
+        isPrepared = true
         val pending = pendingMeasure
         pending?.let { displayUpdate(it.width, it.height)}
         pendingMeasure = null
-        isPrepared = true
     }
 
     fun release() {
-        if (isPrepared) return
+        if (!isPrepared) return
         handler?.run {
             removeCallbacksAndMessages(null)
         }
@@ -51,6 +45,7 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         handlerThread!!.quit()
         handlerThread = null
         handler = null
+        prepareTime = 0L
         isPrepared = false
         danmakuView.invalidate()
     }

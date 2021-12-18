@@ -7,7 +7,6 @@ import android.graphics.RectF
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.util.Log
 import com.blackcat.danmaku.module.Danmaku
 import com.blackcat.danmaku.module.DanmakuDisplay
 import kotlin.math.ceil
@@ -37,13 +36,9 @@ class TrackDanmaku(charSequence: CharSequence, val number: Int, textSize: Float)
         return vx
     }
 
-    override fun onEnterScreen() {
-       Log.e("Run", "enter " + content)
-    }
+    override fun onEnterScreen() {}
 
-    override fun onLeaveScreen() {
-        Log.e("Run", "leave " + content)
-    }
+    override fun onLeaveScreen() {}
 
     override fun onMeasure(
         danmakuDisplay: DanmakuDisplay,
@@ -69,7 +64,7 @@ class TrackDanmaku(charSequence: CharSequence, val number: Int, textSize: Float)
                     MAX_VX
                 }
                 else -> {
-                    width / danmakuDisplay.faceWidth * (MAX_VX - MIN_VX) + MIN_VX
+                    width * 1f / danmakuDisplay.faceWidth * (MAX_VX - MIN_VX) + MIN_VX
                 }
             }
             showDuration = ((danmakuDisplay.faceWidth + width) / vx).toLong()

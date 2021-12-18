@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -17,28 +19,61 @@ import com.blackcat.danmaku.module.track.TrackDanmakuContainer
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+    var currentTrack = 1
+
     @SuppressLint("WrongViewCast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val danmakuView = findViewById<DanmakuView>(R.id.danmaku)
+        val maxTrack = 3
         danmakuView.config(
             danmakuContainerInit = {
                 val list = LinkedList<DanmakuContainer<*>>()
                 val trackDanmakuContainer = TrackDanmakuContainer()
-                val track = Track(0, 300, 100)
-                trackDanmakuContainer.putTrack(track.number, track)
+                for (number in 0 until maxTrack) {
+                    val track = Track(number, 100 * (number + 1), 100)
+                    trackDanmakuContainer.putTrack(track.number, track)
+                }
                 list.add(trackDanmakuContainer)
                 list
             }
         )
-        danmakuView.prepare()
-        danmakuView.start()
-        danmakuView.postDelayed({
-//            danmakuView.addDanmaku(TrackDanmaku("哈哈哈", 0, 63F))
-//            danmakuView.addDanmaku(TrackDanmaku("哈哈哈1", 0, 63F))
-            danmakuView.addDanmaku(TrackDanmaku("a设计大可不必丢完毕不打卡就贬低无敌不爱的", 0, 63F))
-//            danmakuView.addDanmaku(TrackDanmaku("哈哈哈2", 0, 63F))
-        }, 1500)
+        findViewById<View>(R.id.prepare).setOnClickListener {
+            danmakuView.prepare()
+        }
+        findViewById<View>(R.id.start).setOnClickListener {
+            danmakuView.start()
+        }
+        findViewById<View>(R.id.stop).setOnClickListener {
+            danmakuView.stop()
+        }
+        findViewById<View>(R.id.release).setOnClickListener {
+            danmakuView.release()
+        }
+        findViewById<View>(R.id.relayout).setOnClickListener {
+            val layoutParam = danmakuView.layoutParams
+            if (layoutParam.width == ViewGroup.LayoutParams.MATCH_PARENT) {
+                layoutParam.width = 800
+            } else {
+                layoutParam.width = ViewGroup.LayoutParams.MATCH_PARENT
+            }
+            danmakuView.requestLayout()
+        }
+        findViewById<View>(R.id.seek).setOnClickListener {
+            danmakuView.seek(-2000)
+        }
+        findViewById<View>(R.id.publish).setOnClickListener {
+            val time = System.nanoTime()
+            val all = "这是一条弹幕     $time"
+            val real = all.subSequence(0, (Math.random() * 8).toInt())
+
+            danmakuView.addDanmaku(
+                TrackDanmaku(real, currentTrack, 58F)
+            )
+        }
+        findViewById<View>(R.id.check_track).setOnClickListener {
+            currentTrack = (currentTrack + 1) % maxTrack
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.blackcat.danmaku.module.track
 
-import android.util.Log
 import android.util.SparseArray
 import com.blackcat.danmaku.EmptyDanmaku
 import com.blackcat.danmaku.StartTimeCompare
@@ -91,10 +90,10 @@ class TrackDanmakuContainer : DanmakuContainer<TrackShareElement>() {
                     record.record(it)
                     danmakuTree.add(it)
                     track.idleTime = record.lastStartTime + record.lastDuration + track.minTimeInterval
+                    fillTime = track.idleTime
                 } ?: run {
-                    track.idleTime = endTime
+                    fillTime = endTime
                 }
-                fillTime = track.idleTime
             }
         }
     }

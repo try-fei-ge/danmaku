@@ -3,8 +3,6 @@ package com.blackcat.danmaku
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
-import android.util.Log
-import android.util.SparseArray
 import android.view.View
 import com.blackcat.danmaku.face.FrameFace
 import com.blackcat.danmaku.invalidate.FrameCall
@@ -13,7 +11,6 @@ import com.blackcat.danmaku.module.Danmaku
 import com.blackcat.danmaku.module.DanmakuContainer
 import com.blackcat.danmaku.module.DanmakuDisplay
 import com.blackcat.danmaku.module.DrawSchedule
-import com.blackcat.danmaku.module.track.Track
 
 class DanmakuView : View {
     companion object STATIC_PARAM {
@@ -70,6 +67,15 @@ class DanmakuView : View {
         if (danmakuSchedule.isPrepared()) danmakuTimer.start()
     }
 
+    fun seek(duration: Int) {
+        var time = danmakuTimer.getCurrentTime() + duration
+        time = if (time < 0) 0L else time
+        if (time != danmakuTimer.getCurrentTime()) {
+            danmakuTimer.seekTo(time)
+            refresh()
+        }
+    }
+
     fun stop() {
         if (danmakuSchedule.isPrepared()) danmakuTimer.stop()
     }
@@ -77,6 +83,7 @@ class DanmakuView : View {
     fun release() {
         danmakuSchedule.release()
         danmakuTimer.resetTime()
+        refresh()
     }
 
     fun addDanmaku(danmaku: Danmaku<*, *>?) {
@@ -112,6 +119,12 @@ class DanmakuView : View {
         fun resetTime() {
             stop()
             currentTime = 0
+        }
+
+        fun seekTo(time: Long) {
+            if (time == currentTime) return
+            currentTime = time
+            this@DanmakuView.drawFrame(this.currentTime)
         }
 
         override fun doFrame(currentTime: Long) {
