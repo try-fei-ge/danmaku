@@ -58,7 +58,9 @@ class TrackDanmakuContainer : DanmakuContainer<TrackShareElement>() {
             if (!danmaku.isMeasured(danmakuDisplay)) {
                 danmaku.measure(danmakuDisplay)
             }
-            if (!danmaku.inScreen(currentTime, danmakuDisplay)) iterator.remove()
+            if (!danmaku.inScreen(currentTime, danmakuDisplay)) {
+                iterator.remove()
+            }
         }
     }
 
@@ -72,7 +74,7 @@ class TrackDanmakuContainer : DanmakuContainer<TrackShareElement>() {
             val track = trackSet.valueAt(index)
             if (track.idleTime >= startTime) {
                 spearStart.startTime = startTime
-                spearEnd.startTime = -1 + if (track.idleTime >= endTime) endTime else track.idleTime
+                spearEnd.startTime = if (track.idleTime >= endTime) endTime else track.idleTime
                 if (spearEnd.startTime > spearStart.startTime) {
                     list.addAll(danmakuTree.subSet(spearStart, spearEnd))
                 }

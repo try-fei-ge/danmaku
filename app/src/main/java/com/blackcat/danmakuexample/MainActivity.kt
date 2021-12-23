@@ -1,6 +1,7 @@
 package com.blackcat.danmakuexample
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -20,13 +21,14 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
     var currentTrack = 1
+    var danmakuCount = 0
 
     @SuppressLint("WrongViewCast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val danmakuView = findViewById<DanmakuView>(R.id.danmaku)
-        val maxTrack = 3
+        val maxTrack = 5
         danmakuView.config(
             danmakuContainerInit = {
                 val list = LinkedList<DanmakuContainer<*>>()
@@ -50,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.release).setOnClickListener {
             danmakuView.release()
+            currentTrack = 1
+            danmakuCount = 0
         }
         findViewById<View>(R.id.relayout).setOnClickListener {
             val layoutParam = danmakuView.layoutParams
@@ -65,15 +69,14 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.publish).setOnClickListener {
             val time = System.nanoTime()
-            val all = "这是一条弹幕     $time"
-            val real = all.subSequence(0, (Math.random() * 8).toInt())
-
+            val all = "[${danmakuCount}]这是一条弹幕-------$time"
+            val real = all.subSequence(0, 2 + danmakuCount.toString().length + (Math.random() * 20).toInt())
             danmakuView.addDanmaku(
-                TrackDanmaku(real, currentTrack, 58F)
+                TrackDanmaku(real, currentTrack, 58F, textColor = Color.BLUE)
             )
-        }
-        findViewById<View>(R.id.check_track).setOnClickListener {
             currentTrack = (currentTrack + 1) % maxTrack
+            danmakuCount ++
         }
+        findViewById<View>(R.id.check_track).visibility = View.INVISIBLE
     }
 }

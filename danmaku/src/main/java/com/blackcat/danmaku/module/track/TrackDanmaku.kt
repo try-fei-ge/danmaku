@@ -11,14 +11,13 @@ import com.blackcat.danmaku.module.Danmaku
 import com.blackcat.danmaku.module.DanmakuDisplay
 import kotlin.math.ceil
 
-class TrackDanmaku(charSequence: CharSequence, val number: Int, textSize: Float)
+class TrackDanmaku(charSequence: CharSequence, val number: Int, textSize: Float, var textColor: Int = Color.BLACK)
     : Danmaku<TrackShareElement, TrackDeliver>(TRACK, charSequence, textSize) {
     companion object {
         const val MIN_VX = 0.3f
         const val MAX_VX = 0.35f
     }
 
-    private var textColor: Int = Color.BLACK
     private var vx: Float = MIN_VX
     private var duration : Long = 0
     private var showDuration : Long = 0
