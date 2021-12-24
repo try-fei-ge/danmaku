@@ -32,6 +32,10 @@ class DanmakuView : View {
             override fun getCurrentTime(): Long {
                 return danmakuTimer.getCurrentTime()
             }
+
+            override fun isWork(): Boolean {
+                return danmakuTimer.isWork()
+            }
         }
     }
     private val danmakuContext = DanmakuContext(DanmakuDisplay())
@@ -53,20 +57,33 @@ class DanmakuView : View {
         drawFrame?.let { if (canvas != null) it.draw(canvas) }
     }
 
+    /**
+     * 配置弹幕
+     * [danmakuContainerInit] 用于创建支持的[DanmakuContainer]
+     */
     fun config(
         danmakuContainerInit : (() -> List<DanmakuContainer<*>>?)? = null
     ) {
         danmakuSchedule.danmakuContainerInit = danmakuContainerInit
     }
 
+    /**
+     * 准备
+     */
     fun prepare() {
         danmakuSchedule.prepare()
     }
 
+    /**
+     * 开始
+     */
     fun start() {
         if (danmakuSchedule.isPrepared()) danmakuTimer.start()
     }
 
+    /**
+     * 快进
+     */
     fun seek(duration: Int) {
         var time = danmakuTimer.getCurrentTime() + duration
         time = if (time < 0) 0L else time
@@ -76,21 +93,54 @@ class DanmakuView : View {
         }
     }
 
+    /**
+     * 停止
+     */
     fun stop() {
         if (danmakuSchedule.isPrepared()) danmakuTimer.stop()
     }
 
+    /**
+     * 释放
+     */
     fun release() {
         danmakuSchedule.release()
         danmakuTimer.resetTime()
         refresh()
     }
 
+    /**
+     * 是否已准备
+     */
+    fun isPrepare() : Boolean {
+        return danmakuSchedule.isPrepared()
+    }
+
+    /**
+     * 是否已停止，已准备且停止时返回true
+     */
+    fun isStop() : Boolean {
+        return isPrepare() && !danmakuTimer.isWork()
+    }
+
+    /**
+    * 是否已开始，已准备且开始时返回true
+    */
+    fun isStart() : Boolean {
+        return isPrepare() && danmakuTimer.isWork()
+    }
+
+    /**
+     * 添加弹幕
+     */
     fun addDanmaku(danmaku: Danmaku<*, *>?) {
         if (danmaku == null) return
         danmakuSchedule.addDanmaku(danmaku)
     }
 
+    /**
+     * 获取时钟
+     */
     fun getTimer() : DanmakuTimer {
         return danmakuTimerWarp
     }
@@ -99,6 +149,15 @@ class DanmakuView : View {
         drawFrame = null
         danmakuSchedule.displayUpdate(width, height)
         invalidate()
+    }
+
+    internal fun drawNextFrame() {
+        danmakuSchedule.run {
+            this.getFrame(drawFrame)?.let {
+                drawFrame = it
+                invalidate()
+            }
+        }
     }
 
     private fun drawFrame(time: Long) {
@@ -114,7 +173,7 @@ class DanmakuView : View {
     private inner class DanmakuTimerImpl : FrameCall, DanmakuTimer {
         @Volatile private var currentTime: Long = 0
         private var lastFrameTime: Long = DanmakuContext.NO_TIME
-        private var isWorking: Boolean = false
+        @Volatile private var isWorking: Boolean = false
 
         fun resetTime() {
             stop()
@@ -125,6 +184,10 @@ class DanmakuView : View {
             if (time == currentTime) return
             currentTime = time
             this@DanmakuView.drawFrame(this.currentTime)
+        }
+
+        override fun isWork(): Boolean {
+            return isWorking
         }
 
         override fun doFrame(currentTime: Long) {

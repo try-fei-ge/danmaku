@@ -75,20 +75,39 @@ abstract class Danmaku<S : ShareElement, D : Deliver<S>> constructor(
         return enableSizeChange
     }
 
+    /**
+     * 当该弹幕进入屏幕【为绘制时屏幕非展示屏幕】时调用
+     */
     @WorkerThread
     open fun onEnterScreen() {}
 
+    /**
+     * 当该弹幕离开屏幕【为绘制时屏幕非展示屏幕】时调用
+     */
     @WorkerThread
     open fun onLeaveScreen() {}
 
+    /**
+     * 测量屏幕,由[danmakuDisplay]指定屏幕尺寸
+     */
     @WorkerThread
     abstract fun onMeasure(danmakuDisplay: DanmakuDisplay, shareElement: S?) : D?
 
+    /**
+     * 由测量结果和时间决定展示位置，在[onMeasure]之后发生
+     */
     @WorkerThread
     abstract fun onLayout(time: Long, bound: RectF, deliver: D?, danmakuDisplay: DanmakuDisplay) : Boolean
 
+    /**
+     * 该方法运行在主线程绘制弹幕本身，该方法对属性的访问应限制在传入参数中，且谨慎处理对对象的修改
+     * 注明：绘制的时间由主线程运行状态决定，一次绘制总发生在对应[onLayout]之后
+     */
     @MainThread
     abstract fun onDraw(canvas: Canvas, deliver : D?, shareElement: S?, bound: RectF)
 
+    /**
+     * 判断弹幕是否在当前时间的展示区域内
+     */
     abstract fun inScreen(time: Long, danmakuDisplay: DanmakuDisplay) : Boolean
 }

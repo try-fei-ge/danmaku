@@ -18,6 +18,7 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
 
     private val danmakuScreen = DanmakuScreen()
     val exchangeArea = ExchangeArea()
+    var frameSyncCall : (() -> Unit) ?= null
 
     override fun handleMessage(msg: Message) {
         try {
@@ -53,9 +54,11 @@ internal class DrawHandler(looper: Looper, val danmakuContext: DanmakuContext, v
                     exchangeArea.clearFrame()
                     val time = timeFetch.invoke() - 1
                     makeFrame(if (time < 0) 0 else time)
+                    makeFrame(timeFetch.invoke())
                     if (hasMessages(TIME_UPDATE)) {
                         removeMessages(TIME_UPDATE)
-                        makeFrame(timeFetch.invoke())
+                    } else {
+                        frameSyncCall?.invoke()
                     }
                 }
                 TIME_UPDATE -> {

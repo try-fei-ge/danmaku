@@ -28,6 +28,16 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
             it.start()
             handlerThread = it
             handler = DrawHandler(it.looper, danmakuContext) { prepareTime }
+                .let {
+                    it.frameSyncCall = {
+                        danmakuView.post {
+                            if (danmakuView.isStop()) {
+                                danmakuView.drawNextFrame()
+                            }
+                        }
+                    }
+                    it
+                }
             it.isAlive
         }
         isPrepared = true
@@ -40,6 +50,7 @@ internal class DrawSchedule constructor(val danmakuContext: DanmakuContext, val 
         if (!isPrepared) return
         handler?.run {
             removeCallbacksAndMessages(null)
+            frameSyncCall = null
         }
         handler!!.removeCallbacksAndMessages(null)
         handlerThread!!.quit()

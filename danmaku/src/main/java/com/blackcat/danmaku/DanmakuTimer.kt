@@ -6,4 +6,6 @@ interface DanmakuTimer {
     fun stop()
 
     fun getCurrentTime() : Long
+
+    fun isWork() : Boolean
 }
