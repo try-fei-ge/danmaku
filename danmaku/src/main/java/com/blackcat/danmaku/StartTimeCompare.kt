@@ -1,6 +1,5 @@
 package com.blackcat.danmaku
 
-import android.util.Log
 import com.blackcat.danmaku.module.Danmaku
 
 class StartTimeCompare : Comparator<Danmaku<*, *>> {

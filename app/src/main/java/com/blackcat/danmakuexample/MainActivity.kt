@@ -4,14 +4,8 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.dynamicanimation.animation.SpringAnimation
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import com.blackcat.danmaku.DanmakuContainerInit
 import com.blackcat.danmaku.DanmakuView
 import com.blackcat.danmaku.module.DanmakuContainer
 import com.blackcat.danmaku.module.track.Track
